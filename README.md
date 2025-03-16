@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Interactive D3.js Stock Visualization Dashboard
 
-## Getting Started
+An interactive data visualization dashboard built with React and D3.js, featuring multiple chart types, animations, and interactive features.
 
-First, run the development server:
+## Features
+
+### Chart Visualization
+- **Multiple Chart Types**: Line and bar charts with smooth transitions between them
+- **Multi-Chart Dashboard**: View multiple chart visualizations simultaneously
+- **SVG-Based Rendering**: All charts are rendered using SVG for high-quality visualization
+
+### Interactive Features
+- **Tooltips**: Display detailed data information when hovering over chart elements
+- **Zoom & Pan**: Zoom into specific time periods and pan across the chart
+- **Interactive Legends**: Toggle visibility of different data series
+- **Axis Transitions**: Smooth transitions when data or axes change
+- **Dynamic Data Updates**: Chart animates when new data is added or changed
+
+### Filtering & Customization
+- **Data Metrics**: Switch between price, volume, and percentage change views
+- **Time Range Selection**: View data by day, week, or month
+- **Dark/Light Mode**: Toggle between dark and light themes
+- **Data Point Adjustment**: Control the number of data points displayed
+
+### Animation & UX
+- **Animated Transitions**: Smooth animations when data changes
+- **Loading States**: Visual feedback during data loading
+- **Responsive Design**: Works on all screen sizes
+
+## Technology Stack
+
+- **React**: Frontend framework
+- **D3.js**: Core data visualization library
+- **Next.js**: React framework for production
+- **CSS**: Styling with Tailwind CSS
+
+## Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/yourusername/d3-stock-visualization.git
+
+# Navigate to the project directory
+cd d3-stock-visualization
+
+# Install dependencies
+npm install
+
+# Run the development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
