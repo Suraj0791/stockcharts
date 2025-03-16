@@ -38,7 +38,7 @@ An interactive data visualization dashboard built with React and D3.js, featurin
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/d3-stock-visualization.git
+git clone https://github.com/Suraj0791/stockcharts.git
 
 # Navigate to the project directory
 cd d3-stock-visualization
