@@ -135,18 +135,26 @@ const Chart = ({
       // Clear previous chart
       d3.select(svgRef.current).selectAll("*").remove();
 
-      // Chart dimensions
-      const margin = { top: 20, right: 80, bottom: 50, left: 70 };
+      // Chart dimensions with better margins for axis visibility
+      const margin = { top: 40, right: 40, bottom: 100, left: 100 }; // Increased margins for better axis visibility
       const width = svgRef.current.clientWidth - margin.left - margin.right;
-      const height = 500 - margin.top - margin.bottom;
+      const height = 400 - margin.top - margin.bottom; // Fixed height for better consistency
 
-      // Create SVG
+      // Create SVG with proper dimensions and background
       const svg = d3
         .select(svgRef.current)
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
         .append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
+
+      // Add a background rectangle for better visibility
+      svg
+        .append("rect")
+        .attr("width", width)
+        .attr("height", height)
+        .attr("fill", darkMode ? "#1a1e2b" : "#f8fafc")
+        .attr("rx", 8); // Rounded corners
 
       // Validate dates and values
       const validData = data.filter((d) => {
@@ -205,67 +213,72 @@ const Chart = ({
         .attr("width", width)
         .attr("height", height);
 
-      // Create chart group with clip path
-      const chartGroup = svg.append("g").attr("clip-path", "url(#clip)");
+      // FIRST render the axes before any chart content for proper layering
 
-      // Background for better visualization
-      chartGroup
-        .append("rect")
-        .attr("width", width)
-        .attr("height", height)
-        .attr("fill", darkMode ? "#1f2937" : "#f9fafb")
-        .attr("opacity", 0.5);
-
-      // Add grid lines
-      chartGroup
-        .append("g")
-        .attr("class", "grid")
-        .attr("transform", `translate(0,${height})`)
-        .call(d3.axisBottom(x).ticks(5).tickSize(-height).tickFormat(""))
-        .style("stroke", darkMode ? "#374151" : "#e5e7eb")
-        .style("stroke-opacity", 0.3);
-
-      chartGroup
-        .append("g")
-        .attr("class", "grid")
-        .call(d3.axisLeft(y).ticks(5).tickSize(-width).tickFormat(""))
-        .style("stroke", darkMode ? "#374151" : "#e5e7eb")
-        .style("stroke-opacity", 0.3);
-
-      // Add X axis with transition
+      // Add X axis with clear styling
       const xAxis = svg
         .append("g")
         .attr("class", "x-axis")
-        .attr("transform", `translate(0,${height})`);
+        .attr("transform", `translate(0,${height})`) // Position at bottom of chart
+        .call(d3.axisBottom(x).ticks(8).tickFormat(d3.timeFormat("%b %d")));
 
-      const updateXAxis = (duration = 750) => {
-        xAxis
-          .transition()
-          .duration(duration)
-          .call(d3.axisBottom(x).ticks(5).tickFormat(d3.timeFormat("%b %d")))
-          .selectAll("text")
-          .style("text-anchor", "end")
-          .attr("dx", "-.8em")
-          .attr("dy", ".15em")
-          .attr("transform", "rotate(-45)")
-          .style("fill", darkMode ? "#e5e7eb" : "#374151");
-      };
+      // Style X axis
+      xAxis
+        .selectAll(".tick line")
+        .attr("stroke", darkMode ? "#4b5563" : "#94a3b8")
+        .attr("stroke-width", 1);
+      xAxis
+        .selectAll(".tick text")
+        .attr("fill", darkMode ? "#e5e7eb" : "#1e293b")
+        .style("font-size", "12px")
+        .style("font-weight", "500")
+        .attr("dy", "1em");
+      xAxis
+        .select(".domain")
+        .attr("stroke", darkMode ? "#4b5563" : "#64748b")
+        .attr("stroke-width", 2);
 
-      updateXAxis(500);
+      // Add Y axis with clear styling
+      const yAxis = svg
+        .append("g")
+        .attr("class", "y-axis")
+        .call(
+          d3
+            .axisLeft(y)
+            .ticks(8)
+            .tickFormat((d) => {
+              if (filteredMetric === "price") return `$${d}`;
+              if (filteredMetric === "volume") return d3.format(".2s")(d);
+              return `${d}%`;
+            })
+        );
 
-      // Add Y axis with transition
-      const yAxis = svg.append("g").attr("class", "y-axis");
+      // Style Y axis
+      yAxis
+        .selectAll(".tick line")
+        .attr("stroke", darkMode ? "#4b5563" : "#94a3b8")
+        .attr("stroke-width", 1);
+      yAxis
+        .selectAll(".tick text")
+        .attr("fill", darkMode ? "#e5e7eb" : "#1e293b")
+        .style("font-size", "12px")
+        .style("font-weight", "500");
+      yAxis
+        .select(".domain")
+        .attr("stroke", darkMode ? "#4b5563" : "#64748b")
+        .attr("stroke-width", 2);
 
-      const updateYAxis = (duration = 750) => {
-        yAxis
-          .transition()
-          .duration(duration)
-          .call(d3.axisLeft(y).ticks(5))
-          .selectAll("text")
-          .style("fill", darkMode ? "#e5e7eb" : "#374151");
-      };
-
-      updateYAxis(500);
+      // Add X axis label
+      svg
+        .append("text")
+        .attr("class", "x-axis-label")
+        .attr("x", width / 2)
+        .attr("y", height + 60) // Position below axis
+        .attr("text-anchor", "middle")
+        .style("fill", darkMode ? "#e5e7eb" : "#1e293b")
+        .style("font-size", "14px")
+        .style("font-weight", "bold")
+        .text("Date");
 
       // Add Y axis label
       const yLabel =
@@ -278,27 +291,106 @@ const Chart = ({
       svg
         .append("text")
         .attr("transform", "rotate(-90)")
-        .attr("y", 0 - margin.left)
-        .attr("x", 0 - height / 2)
-        .attr("dy", "1em")
-        .style("text-anchor", "middle")
-        .style("fill", darkMode ? "#e5e7eb" : "#374151")
+        .attr("y", -60) // Position to the left of axis
+        .attr("x", -height / 2)
+        .attr("text-anchor", "middle")
+        .style("fill", darkMode ? "#e5e7eb" : "#1e293b")
+        .style("font-size", "14px")
+        .style("font-weight", "bold")
         .text(yLabel);
 
-      // Add X axis label
+      // Grid lines - more subtle than axes
       svg
-        .append("text")
-        .attr(
-          "transform",
-          `translate(${width / 2}, ${height + margin.bottom - 10})`
+        .append("g")
+        .attr("class", "grid x-grid")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(x).ticks(8).tickSize(-height).tickFormat(""))
+        .call((g) =>
+          g
+            .selectAll(".tick line")
+            .attr("stroke", darkMode ? "#374151" : "#e5e7eb")
+            .attr("stroke-opacity", 0.5)
+            .attr("stroke-dasharray", "3,3")
         )
-        .style("text-anchor", "middle")
-        .style("fill", darkMode ? "#e5e7eb" : "#374151")
-        .text("Date");
+        .call((g) => g.select(".domain").remove());
 
-      // For bar chart, calculate bar width based on data points
-      const barWidth =
-        (width / data.length / (visibleCompanies.length + 1)) * 0.8;
+      svg
+        .append("g")
+        .attr("class", "grid y-grid")
+        .call(d3.axisLeft(y).ticks(8).tickSize(-width).tickFormat(""))
+        .call((g) =>
+          g
+            .selectAll(".tick line")
+            .attr("stroke", darkMode ? "#374151" : "#e5e7eb")
+            .attr("stroke-opacity", 0.5)
+            .attr("stroke-dasharray", "3,3")
+        )
+        .call((g) => g.select(".domain").remove());
+
+      // Create chart group with clip path for content
+      const chartGroup = svg
+        .append("g")
+        .attr("class", "chart-content")
+        .attr("clip-path", "url(#clip)");
+
+      // Create dedicated clip path for chart content
+      svg
+        .append("defs")
+        .append("clipPath")
+        .attr("id", "clip")
+        .append("rect")
+        .attr("width", width)
+        .attr("height", height);
+
+      // Function to update X axis with transition
+      const updateXAxis = (duration = 750) => {
+        xAxis
+          .transition()
+          .duration(duration)
+          .call(d3.axisBottom(x).ticks(8).tickFormat(d3.timeFormat("%b %d")))
+          .call((g) => {
+            g.selectAll(".tick line").attr(
+              "stroke",
+              darkMode ? "#4b5563" : "#94a3b8"
+            );
+            g.selectAll(".tick text")
+              .attr("fill", darkMode ? "#e5e7eb" : "#1e293b")
+              .style("font-size", "12px")
+              .attr("dy", "1em");
+          });
+      };
+
+      // Function to update Y axis with transition
+      const updateYAxis = (duration = 750) => {
+        yAxis
+          .transition()
+          .duration(duration)
+          .call(
+            d3
+              .axisLeft(y)
+              .ticks(8)
+              .tickFormat((d) => {
+                if (filteredMetric === "price") return `$${d}`;
+                if (filteredMetric === "volume") return d3.format(".2s")(d);
+                return `${d}%`;
+              })
+          )
+          .call((g) => {
+            g.selectAll(".tick line").attr(
+              "stroke",
+              darkMode ? "#4b5563" : "#94a3b8"
+            );
+            g.selectAll(".tick text")
+              .attr("fill", darkMode ? "#e5e7eb" : "#1e293b")
+              .style("font-size", "12px");
+          });
+      };
+
+      // Calculate appropriate bar width (for bar charts)
+      const barWidth = Math.max(
+        5,
+        (width / validData.length / visibleCompanies.length) * 0.8
+      );
 
       // Draw charts for each visible company
       visibleCompanies.forEach((company, companyIndex) => {
@@ -336,8 +428,13 @@ const Chart = ({
             .attr("stroke-width", 2)
             .attr("d", line);
 
-          // Add data labels
-          chartGroup
+          // Add data labels with better clipping and spacing
+          const labels = chartGroup
+            .append("g")
+            .attr("class", `labels-${company}`)
+            .attr("clip-path", "url(#clip)"); // Ensure labels are clipped properly
+
+          labels
             .selectAll(`.label-${company}`)
             .data(companyData)
             .enter()
@@ -348,6 +445,7 @@ const Chart = ({
             .attr("text-anchor", "middle")
             .attr("fill", color(company))
             .attr("font-size", "10px")
+            .attr("pointer-events", "none") // Prevent labels from interfering with mouse events
             .style("opacity", 0) // Start invisible
             .text((d) => {
               if (filteredMetric === "price") return `$${d.value.toFixed(2)}`;
@@ -381,7 +479,7 @@ const Chart = ({
             .append("circle")
             .attr("cx", (d) => x(new Date(d.date)))
             .attr("cy", (d) => y(d.value))
-            .attr("r", 12)
+            .attr("r", 10)
             .attr("fill", "transparent")
             .style("cursor", "pointer");
 
@@ -412,22 +510,6 @@ const Chart = ({
                 .duration(200)
                 .attr("r", 6)
                 .attr("stroke-width", 3);
-
-              // Add pulse animation
-              point
-                .append("circle")
-                .attr("cx", x(new Date(d.date)))
-                .attr("cy", y(d.value))
-                .attr("r", 4)
-                .attr("fill", "none")
-                .attr("stroke", color(company))
-                .attr("stroke-width", 2)
-                .attr("opacity", 1)
-                .transition()
-                .duration(1000)
-                .attr("r", 15)
-                .attr("opacity", 0)
-                .remove();
 
               // Show tooltip
               setTooltipData({
@@ -484,8 +566,11 @@ const Chart = ({
             .attr("fill", color(company))
             .attr("rx", 2);
 
-          // Add bar labels
+          // Add bar labels inside the clip path for proper containment
           chartGroup
+            .append("g")
+            .attr("class", `bar-labels-${company}`)
+            .attr("clip-path", "url(#clip)")
             .selectAll(`.bar-label-${company}`)
             .data(companyData)
             .join("text")
@@ -511,6 +596,7 @@ const Chart = ({
             .attr("text-anchor", "middle")
             .attr("fill", darkMode ? "#e5e7eb" : "#374151")
             .attr("font-size", "10px")
+            .attr("pointer-events", "none") // Prevent labels from interfering with mouse events
             .text((d) => {
               if (filteredMetric === "price") return `$${d.value.toFixed(2)}`;
               if (filteredMetric === "volume") return d3.format(".2s")(d.value);
@@ -532,60 +618,89 @@ const Chart = ({
           .attr("stroke-dasharray", "4,4");
       }
 
-      // Enhanced zoom functionality
+      // Improved zoom functionality with strict boundary enforcement
       const zoom = d3
         .zoom()
-        .scaleExtent([0.5, 20]) // Allow more zoom range
+        .scaleExtent([0.8, 4]) // More conservative zoom limits
         .translateExtent([
-          [-width * 0.5, -height * 0.5],
-          [width * 1.5, height * 1.5],
-        ]) // Limit pan range
-        .extent([
-          [0, 0],
-          [width, height],
+          [-50, -50], // Allow small overflow for better panning
+          [width + 50, height + 50],
         ])
         .on("zoom", (event) => {
-          const transform = event.transform;
-          const newX = transform.rescaleX(x);
-          const newY = transform.rescaleY(y);
+          // Apply transform to chart content
+          chartGroup.attr("transform", event.transform);
 
-          // Update axes
-          xAxis
-            .call(
-              d3.axisBottom(newX).ticks(5).tickFormat(d3.timeFormat("%b %d"))
-            )
-            .selectAll("text")
-            .style("text-anchor", "end")
-            .attr("dx", "-.8em")
-            .attr("dy", ".15em")
-            .attr("transform", "rotate(-45)")
-            .style("fill", darkMode ? "#e5e7eb" : "#374151");
+          // Update axes with the transformed scales
+          const newX = event.transform.rescaleX(x);
+          const newY = event.transform.rescaleY(y);
 
-          yAxis
-            .call(d3.axisLeft(newY).ticks(5))
-            .selectAll("text")
-            .style("fill", darkMode ? "#e5e7eb" : "#374151");
+          // Update X axis
+          xAxis.call(
+            d3.axisBottom(newX).ticks(8).tickFormat(d3.timeFormat("%b %d"))
+          );
 
-          // Transform the chart group
-          chartGroup.attr("transform", transform);
+          // Update Y axis
+          yAxis.call(
+            d3
+              .axisLeft(newY)
+              .ticks(8)
+              .tickFormat((d) => {
+                if (filteredMetric === "price") return `$${d}`;
+                if (filteredMetric === "volume") return d3.format(".2s")(d);
+                return `${d}%`;
+              })
+          );
 
           // Update grid lines
-          svg.selectAll(".grid").call((g) => {
-            g.select(".x-grid").call(
-              d3.axisBottom(newX).ticks(5).tickSize(-height).tickFormat("")
-            );
-            g.select(".y-grid").call(
-              d3.axisLeft(newY).ticks(5).tickSize(-width).tickFormat("")
-            );
-          });
+          svg
+            .select(".x-grid")
+            .call(d3.axisBottom(newX).ticks(8).tickSize(-height).tickFormat(""))
+            .call((g) => g.select(".domain").remove());
+
+          svg
+            .select(".y-grid")
+            .call(d3.axisLeft(newY).ticks(8).tickSize(-width).tickFormat(""))
+            .call((g) => g.select(".domain").remove());
         });
 
-      // Add zoom behavior with improved reset
-      svg.call(zoom).on("dblclick.zoom", () => {
-        svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity);
-      });
+      // Enhanced reset zoom button with better visibility
+      const resetZoomBtn = svg
+        .append("g")
+        .attr("class", "reset-zoom-btn")
+        .attr("transform", `translate(${width - 40}, 30)`)
+        .style("cursor", "pointer")
+        .on("click", () => {
+          svg.transition().duration(500).call(zoom.transform, d3.zoomIdentity);
+        });
 
-      // Add zoom instructions
+      resetZoomBtn
+        .append("rect")
+        .attr("width", 32)
+        .attr("height", 32)
+        .attr("rx", 6)
+        .attr("fill", darkMode ? "#4b5563" : "#e5e7eb")
+        .attr("stroke", darkMode ? "#9ca3af" : "#6b7280")
+        .attr("stroke-width", 2)
+        .attr("fill-opacity", 0.95);
+
+      resetZoomBtn
+        .append("text")
+        .attr("x", 16)
+        .attr("y", 22)
+        .attr("text-anchor", "middle")
+        .attr("fill", darkMode ? "#f9fafb" : "#1f2937")
+        .style("font-size", "17px")
+        .style("font-weight", "bold")
+        .text("⟲");
+
+      // Initialize zoom with constrained behavior
+      svg
+        .call(zoom)
+        .call(zoom.transform, d3.zoomIdentity)
+        .on("dblclick.zoom", null)
+        .style("touch-action", "none");
+
+      // Add zoom instructions with better visibility
       svg
         .append("text")
         .attr("class", "zoom-instruction")
@@ -593,11 +708,22 @@ const Chart = ({
         .attr("y", height - 10)
         .attr("text-anchor", "middle")
         .attr("font-size", "12px")
-        .attr("fill", darkMode ? "#6b7280" : "#9ca3af")
-        .text("Double-click to reset zoom");
+        .attr("fill", darkMode ? "#9ca3af" : "#64748b")
+        .text("Scroll to zoom, drag to pan");
 
       // Store chart reference
-      chartRef.current = { svg, x, y, width, height, margin };
+      chartRef.current = {
+        svg,
+        x,
+        y,
+        width,
+        height,
+        margin,
+        xAxis,
+        yAxis,
+        updateXAxis,
+        updateYAxis,
+      };
     } catch (error) {
       console.error("Error rendering chart:", error);
       // Handle error gracefully - could show an error message to user
